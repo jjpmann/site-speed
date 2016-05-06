@@ -1,0 +1,29 @@
+{
+  "name": "site-speed",
+  "version": "0.0.1",
+  "description": "PageSpeed Insights for your site",
+  "main": "index.js",
+  "dependencies": {
+    "dateformat": "^1.0.12",
+    "psi": "^2.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jjpmann/site-speed.git"
+  },
+  "keywords": [
+    "psi",
+    "speed",
+    "site"
+  ],
+  "author": "jjpmann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jjpmann/site-speed/issues"
+  },
+  "homepage": "https://github.com/jjpmann/site-speed#readme"
+}
