@@ -1,6 +1,31 @@
 # site-speed
-PageSpeed Insights for your site
+
+> Runs PSI (PageSpeed Insights) for your site
 
 
-Runs PSI for multiple URLs in an array
+## Install
 
+```
+$ npm install --save site-speed
+```
+
+
+## Usage
+
+```js
+var ss = require('./index.js');
+
+var pages = [
+    'https://github.com/',
+    'https://www.google.com/',
+]
+
+
+ss.run(pages)
+```
+
+## CLI
+
+```
+$ npm install --global site-speed
+```
