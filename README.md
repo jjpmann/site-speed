@@ -29,3 +29,10 @@ ss.run(pages)
 ```
 $ npm install --global site-speed
 ```
+
+
+## ToDo
+
+- Add file name for saving
+- Add primer to make sure pages are cached
+- Add enpoint to hit before/after running tests
