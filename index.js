@@ -73,7 +73,7 @@ SS.prototype.run = function(pages) {
     }
 
     function writeFile(string) {
-        var dt =  dateFormat(now, "yyyyddmm-hhMMss");
+        var dt =  dateFormat(now, "yyyymmdd-hhMMss");
         var file = './data/' + dt + '.json';
         fs.writeFile(file, string, function (err) {
             if (err) return console.log(err);
