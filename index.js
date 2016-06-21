@@ -32,6 +32,11 @@ SS.prototype.run = function(pages, opts) {
         _output = {},
         count = 0;
 
+    function showError(err) {
+        console.error('Error: ', err );
+        return;
+    }
+
     function collectScores(data) {
 
         //console.log( 'collectScores', data.strategy, data.page);
@@ -69,13 +74,14 @@ SS.prototype.run = function(pages, opts) {
         });
 
         req.on('error', (e) => {
-            console.log(`problem with request: ${e.message}`);
+            showError(`problem with request: ${e.message}`);
         });
 
         req.end();
     }
 
     function getScore(page, callback) {
+        console.log( page );
         if (opts.primer) {
             prime(page, callback)
             return
@@ -94,7 +100,6 @@ SS.prototype.run = function(pages, opts) {
     }
 
     function getPsi(page, strategy, callback) {
-
         var options = { 
             strategy: strategy
         }
@@ -102,17 +107,19 @@ SS.prototype.run = function(pages, opts) {
         if (opts.googleKey) {
             options.key = opts.googleKey
         }
+
         try {
-            var call = psi('', options).then(function (data) {
+            var call = psi(page, options).then(function (data) {
                 delete(data.formattedResults)
                 callback({page: page, strategy: strategy, data: data})
+            }, function(reason){
+                showError(reason);
             });
-            console.log( call );
         }
         catch(err) {
-            console.log( err );
+            showError(err);
         }
-        
+
     }
 
     function writeFile(string) {
@@ -120,7 +127,7 @@ SS.prototype.run = function(pages, opts) {
         var file =  opts.output + dt + '.json';
 
         fs.writeFile(file, string, function (err) {
-            if (err) return console.log(err);
+            if (err) return showError(err);
         });
 
         console.log( 'All Done: file saved as '+ file );
@@ -134,7 +141,7 @@ SS.prototype.run = function(pages, opts) {
 
         if (_pages.length) {
             var item = _pages.shift();
-            console.log( item );
+            //console.log( item );
             getScore(item, collectScores);
         } else {
             //console.log( _output );
