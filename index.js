@@ -11,24 +11,26 @@ var dateFormat = require('dateformat');
 
 var SS = function () {}
 
-SS.prototype.run = function(pages) {
-    
-    var self = this,
-        now = new Date(),
+SS.prototype.run = function(pages, opts) {
+
+    // defaults
+    var defaults = {
+        output: './data/',
+        primer: false,
+        before: false,
+        after: false
+    }
+
+    var opts = Object.assign(defaults, opts || {});
+
+    if (!opts.googleKey) {
+        console.log( 'Warning using Googles API without a key will have limitations.' );
+    }
+
+    var now = new Date(),
         _pages = [],
         _output = {},
         count = 0;
-
-    function output(data) {
-
-        // console.error( 'Page: ' + data.page );
-        // console.log('Speed score: ' + data.data.ruleGroups.SPEED.score);
-        // console.log('Usability score: ' + data.data.ruleGroups.USABILITY.score);
-
-        console.log( data );
-
-        //console.log( _output );
-    }
 
     function collectScores(data) {
 
@@ -46,9 +48,41 @@ SS.prototype.run = function(pages) {
         }
     }
 
+    function prime(page, callback) {
+        var url = require('url').parse(page);
+
+        var options = {
+            hostname: url.hostname,
+            protocol: url.protocol,
+            path: url.path
+        }
+
+        var http = url.protocol === 'https:' ? require('https') : require('http');
+
+        var req = http.request(options, (res) => {
+            console.log(`Prime (STATUS: ${res.statusCode})`);
+            res.on('data', (chunk) => {});
+            res.on('end', () => {
+                getMobile(page, callback);
+                getDesktop(page, callback);
+            })
+        });
+
+        req.on('error', (e) => {
+            console.log(`problem with request: ${e.message}`);
+        });
+
+        req.end();
+    }
+
     function getScore(page, callback) {
-        getMobile(page, callback);
-        getDesktop(page, callback);
+        if (opts.primer) {
+            prime(page, callback)
+            return
+        } else {
+            getMobile(page, callback);
+            getDesktop(page, callback);
+        }
     }
 
     function getMobile(page, callback) {
@@ -62,22 +96,34 @@ SS.prototype.run = function(pages) {
     function getPsi(page, strategy, callback) {
 
         var options = { 
-            key: 'AIzaSyCp27xVoThqHBfxdDvI-6m75XfJh5mDnCI',
             strategy: strategy
         }
+
+        if (opts.googleKey) {
+            options.key = opts.googleKey
+        }
+        try {
+            var call = psi('', options).then(function (data) {
+                delete(data.formattedResults)
+                callback({page: page, strategy: strategy, data: data})
+            });
+            console.log( call );
+        }
+        catch(err) {
+            console.log( err );
+        }
         
-        psi(page, options).then(function (data) {
-            delete(data.formattedResults)
-            callback({page: page, strategy: strategy, data: data})
-        });
     }
 
     function writeFile(string) {
         var dt =  dateFormat(now, "yyyymmdd-hhMMss");
-        var file = './data/' + dt + '.json';
+        var file =  opts.output + dt + '.json';
+
         fs.writeFile(file, string, function (err) {
             if (err) return console.log(err);
         });
+
+        console.log( 'All Done: file saved as '+ file );
     }
 
     function processArray(pages) {
@@ -91,7 +137,6 @@ SS.prototype.run = function(pages) {
             console.log( item );
             getScore(item, collectScores);
         } else {
-            console.log( 'All Done' );
             //console.log( _output );
             writeFile(JSON.stringify(_output));
         }
