@@ -22,7 +22,6 @@ var options = {
 }
 
 var pages = [
-    'http://www.lmo.com/',
     'https://github.com/',
     'https://www.google.com/',
 ]
