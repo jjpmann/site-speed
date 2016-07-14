@@ -1,6 +1,6 @@
 {
   "name": "site-speed",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "PageSpeed Insights for your site",
   "main": "index.js",
   "dependencies": {
