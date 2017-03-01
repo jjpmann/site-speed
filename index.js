@@ -1,6 +1,7 @@
 'use strict';
 
 var psi = require('psi');
+var ylt = require('yellowlabtools');
 var fs = require('fs');
 var dateFormat = require('dateformat');
 
@@ -39,14 +40,22 @@ SS.prototype.run = function(pages, opts) {
 
     function collectScores(data) {
 
-        //console.log( 'collectScores', data.strategy, data.page);
+        // Todo: Clean up this process 
 
         if (typeof _output[data.page] === 'undefined') {
             _output[data.page] = {};
         }
-        _output[data.page][data.strategy] = data.data;
+        if (typeof _output[data.page][data.strategy]  === 'undefined') {
+            _output[data.page][data.strategy] = {};
+        }
+        _output[data.page][data.strategy][data.type] = data.data;
         
-        if ( typeof _output[data.page]['mobile'] !== 'undefined' && typeof _output[data.page]['desktop'] !== 'undefined') {
+        if ( typeof _output[data.page]['mobile'] !== 'undefined' && (
+                typeof _output[data.page]['mobile']['Pagespeed Insights'] !== 'undefined' 
+                && typeof _output[data.page]['mobile']['Yellowlab Tools'] !== 'undefined' )
+             && typeof _output[data.page]['desktop'] !== 'undefined' && (
+                typeof _output[data.page]['desktop']['Pagespeed Insights'] !== 'undefined'
+                && typeof _output[data.page]['desktop']['Yellowlab Tools'] !== 'undefined') ){
              //console.log( 'do next' );
              //console.log( _output );
              processArray();
@@ -93,10 +102,35 @@ SS.prototype.run = function(pages, opts) {
 
     function getMobile(page, callback) {
         getPsi(page, 'mobile', callback);
+        getYlt(page, 'mobile', callback);
     }
 
     function getDesktop(page, callback) {
         getPsi(page, 'desktop', callback);
+        getYlt(page, 'desktop', callback);
+    }
+
+    function getYlt(page, strategy, callback){
+
+        var options = {
+            device: strategy
+        };
+
+        try {
+            ylt(page, options)
+                .then(function(data) {
+                    callback({page: page, strategy: strategy, data: data, type: 'Yellowlab Tools'})
+                })
+                .fail(function(reason) {
+                    showError(reason);
+                });
+        }
+        catch(err) {
+            showError(err);
+        }
+
+       
+
     }
 
     function getPsi(page, strategy, callback) {
@@ -111,7 +145,7 @@ SS.prototype.run = function(pages, opts) {
         try {
             var call = psi(page, options).then(function (data) {
                 delete(data.formattedResults)
-                callback({page: page, strategy: strategy, data: data})
+                callback({page: page, strategy: strategy, data: data, type: 'Pagespeed Insights'})
             }, function(reason){
                 showError(reason);
             });
@@ -119,7 +153,6 @@ SS.prototype.run = function(pages, opts) {
         catch(err) {
             showError(err);
         }
-
     }
 
     function writeFile(string) {
