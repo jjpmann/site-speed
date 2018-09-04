@@ -5,11 +5,6 @@ var ylt = require('yellowlabtools');
 var fs = require('fs');
 var dateFormat = require('dateformat');
 
-// for (var i = pages.length - 1; i >= 0; i--) {
-//     var page = pages[i];
-
-// }
-
 var SS = function () {}
 
 SS.prototype.run = function(pages, opts) {
@@ -19,7 +14,8 @@ SS.prototype.run = function(pages, opts) {
         output: './data/',
         primer: false,
         before: false,
-        after: false
+        after: false,
+        truncate: true,
     }
 
     var opts = Object.assign(defaults, opts || {});
@@ -40,7 +36,7 @@ SS.prototype.run = function(pages, opts) {
 
     function collectScores(data) {
 
-        // Todo: Clean up this process 
+        // Todo: Clean up this process
 
         if (typeof _output[data.page] === 'undefined') {
             _output[data.page] = {};
@@ -49,9 +45,9 @@ SS.prototype.run = function(pages, opts) {
             _output[data.page][data.strategy] = {};
         }
         _output[data.page][data.strategy][data.type] = data.data;
-        
+
         if ( typeof _output[data.page]['mobile'] !== 'undefined' && (
-                typeof _output[data.page]['mobile']['Pagespeed Insights'] !== 'undefined' 
+                typeof _output[data.page]['mobile']['Pagespeed Insights'] !== 'undefined'
                 && typeof _output[data.page]['mobile']['Yellowlab Tools'] !== 'undefined' )
              && typeof _output[data.page]['desktop'] !== 'undefined' && (
                 typeof _output[data.page]['desktop']['Pagespeed Insights'] !== 'undefined'
@@ -119,6 +115,26 @@ SS.prototype.run = function(pages, opts) {
         try {
             ylt(page, options)
                 .then(function(data) {
+
+                    if (opts.truncate) {
+
+                        if (data.javascriptExecutionTree) {
+                            data.javascriptExecutionTree.children = null;
+                        }
+
+                        if (data.toolsResults) {
+                            Object.keys(data.toolsResults).forEach(function (key) {
+                                data.toolsResults[key].offenders = null;
+                            })
+                        }
+
+                        if (data.rules) {
+                            Object.keys(data.rules).forEach(function (key) {
+                               data.rules[key].offendersObj = null;
+                            });
+                        }
+                    }
+
                     callback({page: page, strategy: strategy, data: data, type: 'Yellowlab Tools'})
                 })
                 .fail(function(reason) {
@@ -129,12 +145,12 @@ SS.prototype.run = function(pages, opts) {
             showError(err);
         }
 
-       
+
 
     }
 
     function getPsi(page, strategy, callback) {
-        var options = { 
+        var options = {
             strategy: strategy
         }
 
@@ -156,7 +172,7 @@ SS.prototype.run = function(pages, opts) {
     }
 
     function writeFile(string) {
-        var dt =  dateFormat(now, "yyyymmdd-hhMMss");
+        var dt =  dateFormat(now, "yyyymmdd-HHMMss");
         var file =  opts.output + dt + '.json';
 
         fs.writeFile(file, string, function (err) {
@@ -180,7 +196,7 @@ SS.prototype.run = function(pages, opts) {
             //console.log( _output );
             writeFile(JSON.stringify(_output));
         }
-    } 
+    }
 
     return processArray(pages);
 };
