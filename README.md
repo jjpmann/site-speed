@@ -40,8 +40,10 @@ __output__ folder or prefix of files to be saved.
 $ npm install --global site-speed
 ```
 
+## Latest
+
+* Added YellowLab Tools as second engine to generate speed statistics
 
 ## ToDo
 
 - Add enpoint to hit before/after running tests
-- Add add config file parser JSON (maybe yaml)  __node ./site-speed__
