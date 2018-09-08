@@ -4,6 +4,7 @@ var psi = require('psi');
 var ylt = require('yellowlabtools');
 var fs = require('fs');
 var dateFormat = require('dateformat');
+var Handlebars = require("handlebars");
 
 var SS = function () {}
 
@@ -16,6 +17,8 @@ SS.prototype.run = function(pages, opts) {
         before: false,
         after: false,
         truncate: true,
+        report: true,
+
     }
 
     var opts = Object.assign(defaults, opts || {});
@@ -28,6 +31,7 @@ SS.prototype.run = function(pages, opts) {
         _pages = [],
         _output = {},
         count = 0;
+    var dt = dateFormat(now, "yyyymmdd-HHMMss");
 
     function showError(err) {
         console.error('Error: ', err );
@@ -47,11 +51,11 @@ SS.prototype.run = function(pages, opts) {
         _output[data.page][data.strategy][data.type] = data.data;
 
         if ( typeof _output[data.page]['mobile'] !== 'undefined' && (
-                typeof _output[data.page]['mobile']['Pagespeed Insights'] !== 'undefined'
-                && typeof _output[data.page]['mobile']['Yellowlab Tools'] !== 'undefined' )
+                typeof _output[data.page]['mobile']['psi'] !== 'undefined'
+                && typeof _output[data.page]['mobile']['ylt'] !== 'undefined' )
              && typeof _output[data.page]['desktop'] !== 'undefined' && (
-                typeof _output[data.page]['desktop']['Pagespeed Insights'] !== 'undefined'
-                && typeof _output[data.page]['desktop']['Yellowlab Tools'] !== 'undefined') ){
+                typeof _output[data.page]['desktop']['psi'] !== 'undefined'
+                && typeof _output[data.page]['desktop']['ylt'] !== 'undefined') ){
              //console.log( 'do next' );
              //console.log( _output );
              processArray();
@@ -135,7 +139,7 @@ SS.prototype.run = function(pages, opts) {
                         }
                     }
 
-                    callback({page: page, strategy: strategy, data: data, type: 'Yellowlab Tools'})
+                    callback({page: page, strategy: strategy, data: data, type: 'ylt'})
                 })
                 .fail(function(reason) {
                     showError(reason);
@@ -144,9 +148,6 @@ SS.prototype.run = function(pages, opts) {
         catch(err) {
             showError(err);
         }
-
-
-
     }
 
     function getPsi(page, strategy, callback) {
@@ -161,7 +162,7 @@ SS.prototype.run = function(pages, opts) {
         try {
             var call = psi(page, options).then(function (data) {
                 delete(data.formattedResults)
-                callback({page: page, strategy: strategy, data: data, type: 'Pagespeed Insights'})
+                callback({page: page, strategy: strategy, data: data, type: 'psi'})
             }, function(reason){
                 showError(reason);
             });
@@ -171,15 +172,49 @@ SS.prototype.run = function(pages, opts) {
         }
     }
 
-    function writeFile(string) {
-        var dt =  dateFormat(now, "yyyymmdd-HHMMss");
-        var file =  opts.output + dt + '.json';
-
+    function writeFile(file, string) {
         fs.writeFile(file, string, function (err) {
             if (err) return showError(err);
         });
 
         console.log( 'All Done: file saved as '+ file );
+    }
+
+    function buildReport(data) {
+        var urls = Object.keys(data.pages);
+
+        var pages = [];
+        var engines = data.engines;
+        var stategies = data.stategies
+
+        urls.forEach(function (url) {
+
+            pages.push({
+                url: url,
+                data: data.pages[url]
+            });
+
+        });
+
+        return {
+            title: data.title,
+            pages: pages
+        }
+
+    }
+
+    function writeData(data) {
+        var file = opts.output + dt + '.json';
+        writeFile(file, JSON.stringify(data));
+    }
+
+    function writeReport(raw) {
+        var file = opts.output + 'report-' + dt + '.html';
+        var template = fs.readFileSync('template.html', 'utf8');
+        var report = buildReport(raw);
+        var templateScript = Handlebars.compile(template);
+
+        writeFile(file, templateScript(report));
     }
 
     function processArray(pages) {
@@ -194,7 +229,24 @@ SS.prototype.run = function(pages, opts) {
             getScore(item, collectScores);
         } else {
             //console.log( _output );
-            writeFile(JSON.stringify(_output));
+
+            var report = {
+                title: 'Report ' + dt,
+                engines: [
+                    'psi',
+                    'ylt',
+                ],
+                stategies: [
+                    'mobile',
+                    'desktop',
+                ],
+                pages: _output
+            }
+
+            if (opts.report) {
+                writeReport(report);
+            }
+            writeData(report);
         }
     }
 

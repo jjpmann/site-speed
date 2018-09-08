@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title>{{title}}</title>
+    </head>
+    <body>
+        <h1>{{title}}</h1>
+
+        {{#each pages}}
+            <div>
+                <h3>{{url}}</h3>
+                <div style="width: 49%; float: left;">
+                    <h4>Mobile</h4>
+                    <p>PSI Speed: {{data.mobile.psi.ruleGroups.SPEED.score}}</p>
+                    <p>PSI Usability: {{data.mobile.psi.ruleGroups.USABILITY.score}}</p>
+                    <p>YLT Grade: {{data.mobile.ylt.scoreProfiles.generic.globalScore}}</p>
+                </div>
+                <div style="width: 49%; float: left;">
+                    <h4>Desktop</h4>
+                    <p>PSI Score: {{data.desktop.psi.ruleGroups.SPEED.score}}</p>
+                    <p>PSI Usability: n/a</p>
+                    <p>YLT Grade: {{data.desktop.ylt.scoreProfiles.generic.globalScore}}</p>
+                </div>
+            </div>
+        {{/each}}
+    </body>
+</html>
