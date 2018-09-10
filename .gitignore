@@ -2,3 +2,7 @@ node_modules
 data
 run.js
 staging.js
+report.js
+speed-test
+usip-speed-test.js
+package-lock.json

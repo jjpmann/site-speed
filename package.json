@@ -25,7 +25,9 @@
     "psi": "^3.1.0",
     "yellowlabtools": "^1.13.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jest": "^23.5.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
